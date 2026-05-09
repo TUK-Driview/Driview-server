@@ -54,10 +54,9 @@ jobs:
             sudo docker run -d \
               --name driview \
               -p 8080:8080 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e SPRING_PROFILES_ACTIVE=prod \
+              -e DB_HOST=${{ secrets.DB_URL }} \
+              -e DB_NAME=${{ secrets.DB_USER }} \
+              -e DB_PASSWORD=${{ secrets.DB_PW }} \
+              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               ${{ secrets.DOCKER_USERNAME }}/driview:latest
             sudo docker image prune -af
