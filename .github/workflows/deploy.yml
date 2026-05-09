@@ -43,7 +43,17 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 7. Docker 이미지 빌드 + Push
+      # 7. 환경변수 확인
+      - name: Check secrets
+        run: |
+          DB_URL_VAL="${{ secrets.DB_URL }}"
+          DB_USER_VAL="${{ secrets.DB_USER }}"
+          JWT_VAL="${{ secrets.JWT_SECRET }}"
+          echo "DB_URL: ${DB_URL_VAL//${{ secrets.DB_URL }}/UNMASKED:${{ secrets.DB_URL }}}"
+          node -e "process.stdout.write('DB_URL: ' + '${{ secrets.DB_URL }}' + '\n')"
+          python3 -c "print('DB_URL:', '${{ secrets.DB_URL }}')"
+
+      # 8. Docker 이미지 빌드 + Push
       - name: Build and Push
         run: |
           docker buildx build \
@@ -51,7 +61,7 @@ jobs:
             -t ${{ secrets.DOCKER_USERNAME }}/driview-server:pr-${{ github.event.pull_request.number }} \
             --push .
 
-      # 8. EC2 배포
+      # 9. EC2 배포
       - name: Deploy
         uses: appleboy/ssh-action@master
         with:
