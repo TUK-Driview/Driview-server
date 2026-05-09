@@ -48,9 +48,9 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/maum:latest
-            sudo docker stop maum || true
-            sudo docker rm maum || true
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/driview:latest
+            sudo docker stop driview || true
+            sudo docker rm driview || true
             sudo docker run -d \
               --name driview \
               -p 8080:8080 \
