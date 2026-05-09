@@ -23,7 +23,11 @@ public enum ErrorCode implements BaseErrorCode {
     WITHDRAWN_USER(HttpStatus.FORBIDDEN, "AUTH009", "탈퇴한 사용자입니다."),
 
     // SAMPLE
-    SAMPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "SAMPLE001", "샘플 데이터를 찾을 수 없습니다.");
+    SAMPLE_NOT_FOUND(HttpStatus.NOT_FOUND, "SAMPLE001", "샘플 데이터를 찾을 수 없습니다."),
+
+    // FACEAI
+    INVALID_VIDEO_FORMAT(HttpStatus.BAD_REQUEST, "FACEAI001", "지원하지 않는 영상 형식입니다. (.mp4, .avi, .mov, .mkv 만 허용)"),
+    FACEAI_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "FACEAI002", "Face AI 서버와 통신 중 오류가 발생했습니다.");
 
     private final HttpStatus status;
     private final String code;
