@@ -28,6 +28,7 @@ public enum ErrorCode implements BaseErrorCode {
     // DRIVING
     SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "DRIVING001", "운전 세션을 찾을 수 없습니다."),
     SESSION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "DRIVING002", "해당 세션에 접근 권한이 없습니다."),
+    REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "DRIVING003", "운행 리포트를 찾을 수 없습니다."),
 
     // FACEAI
     INVALID_VIDEO_FORMAT(HttpStatus.BAD_REQUEST, "FACEAI001", "지원하지 않는 영상 형식입니다. (.mp4, .avi, .mov, .mkv 만 허용)"),
