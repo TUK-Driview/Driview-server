@@ -52,6 +52,15 @@ public class DrivingController {
                 drivingService.endDriving(sessionId, userDetails.getUserId(), request)));
     }
 
+    @GetMapping("/{sessionId}/timeline")
+    @Operation(summary = "위험 구간 타임라인 조회", description = "운전 세션의 위반 이벤트 타임라인을 조회합니다.")
+    public ResponseEntity<ApiResponse<DrivingTimelineResponse>> getTimeline(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(
+                drivingService.getTimeline(sessionId, userDetails.getUserId())));
+    }
+
     @GetMapping("/{sessionId}/report")
     @Operation(summary = "운행 리포트 상세 조회", description = "운전 세션의 분석 리포트를 조회합니다.")
     public ResponseEntity<ApiResponse<DrivingReportResponse>> getReport(

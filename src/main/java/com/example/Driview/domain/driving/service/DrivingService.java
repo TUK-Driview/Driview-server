@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,16 @@ public class DrivingService {
             "C", "POOR",
             "D", "VERY_POOR"
     );
+
+    private static final Map<ViolationType, String> TYPE_LABEL = Map.of(
+            ViolationType.LANE_DEPARTURE, "LANE_DEPARTURE",
+            ViolationType.DROWSY, "DROWSINESS",
+            ViolationType.SPEEDING, "SPEEDING",
+            ViolationType.SUDDEN_BRAKE, "HARD_BRAKING",
+            ViolationType.SUDDEN_ACCEL, "SUDDEN_ACCEL"
+    );
+
+    private static final Set<ViolationType> DURATION_TYPES = Set.of(ViolationType.DROWSY);
 
     @Transactional
     public DrivingStartResponse startDriving(Long userId, DrivingStartRequest request) {
@@ -100,6 +111,33 @@ public class DrivingService {
         }).toList();
 
         return new DrivingSessionListResponse(year, month, summaries);
+    }
+
+    @Transactional(readOnly = true)
+    public DrivingTimelineResponse getTimeline(Long sessionId, Long userId) {
+        DrivingSession session = drivingSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.SESSION_ACCESS_DENIED);
+        }
+
+        List<TimelineEventResponse> events = violationEventRepository
+                .findBySession_IdOrderByOccurredAtSecAsc(sessionId)
+                .stream()
+                .map(v -> {
+                    boolean isDuration = DURATION_TYPES.contains(v.getType());
+                    return new TimelineEventResponse(
+                            v.getOccurredAtSec(),
+                            TYPE_LABEL.getOrDefault(v.getType(), v.getType().name()),
+                            v.getLocationDesc(),
+                            isDuration ? null : 1,
+                            isDuration ? v.getDurationSec() : null
+                    );
+                })
+                .toList();
+
+        return new DrivingTimelineResponse(sessionId, events);
     }
 
     @Transactional(readOnly = true)

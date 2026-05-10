@@ -29,6 +29,7 @@ public class ViolationEvent {
     private Double latitude;
     private Double longitude;
     private Integer severity; // 1(낮음) ~ 3(높음)
+    private Double durationSec; // 졸음 이벤트 지속 시간 (초)
 
     // ==================== 팩토리 메서드 ====================
 
