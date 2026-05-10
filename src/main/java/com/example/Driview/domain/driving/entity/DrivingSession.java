@@ -33,6 +33,8 @@ public class DrivingSession {
     private String driverVideoUrl;
     private Double startLat;
     private Double startLng;
+    private Double endLat;
+    private Double endLng;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,14 +62,12 @@ public class DrivingSession {
 
     // ==================== 비즈니스 메서드 ====================
 
-    public void complete(String destination, Float distanceKm, Integer durationSec,
-                         String frontVideoUrl, String driverVideoUrl) {
-        this.destination = destination;
+    public void complete(Double endLat, Double endLng, LocalDateTime endedAt, Float distanceKm) {
+        this.endLat = endLat;
+        this.endLng = endLng;
+        this.endedAt = endedAt;
         this.distanceKm = distanceKm;
-        this.durationSec = durationSec;
-        this.frontVideoUrl = frontVideoUrl;
-        this.driverVideoUrl = driverVideoUrl;
-        this.endedAt = LocalDateTime.now();
+        this.durationSec = (int) java.time.Duration.between(this.startedAt, endedAt).getSeconds();
         this.status = DrivingStatus.COMPLETED;
     }
 
