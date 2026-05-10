@@ -31,6 +31,8 @@ public class DrivingSession {
     private Integer durationSec;
     private String frontVideoUrl;
     private String driverVideoUrl;
+    private Double startLat;
+    private Double startLng;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -44,11 +46,12 @@ public class DrivingSession {
 
     // ==================== 팩토리 메서드 ====================
 
-    public static DrivingSession start(User user, String origin) {
+    public static DrivingSession start(User user, Double startLat, Double startLng, LocalDateTime startedAt) {
         DrivingSession session = new DrivingSession();
         session.user = user;
-        session.origin = origin;
-        session.startedAt = LocalDateTime.now();
+        session.startLat = startLat;
+        session.startLng = startLng;
+        session.startedAt = startedAt;
         session.status = DrivingStatus.IN_PROGRESS;
         session.analysisStatus = AnalysisStatus.PENDING;
         session.analysisProgress = 0;
