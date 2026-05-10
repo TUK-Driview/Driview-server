@@ -1,10 +1,6 @@
 package com.example.Driview.domain.driving.controller;
 
-import com.example.Driview.domain.driving.dto.DrivingAnalysisStatusResponse;
-import com.example.Driview.domain.driving.dto.DrivingEndRequest;
-import com.example.Driview.domain.driving.dto.DrivingEndResponse;
-import com.example.Driview.domain.driving.dto.DrivingStartRequest;
-import com.example.Driview.domain.driving.dto.DrivingStartResponse;
+import com.example.Driview.domain.driving.dto.*;
 import com.example.Driview.domain.driving.service.DrivingService;
 import com.example.Driview.global.common.response.ApiResponse;
 import com.example.Driview.global.security.CustomUserDetails;
@@ -25,6 +21,16 @@ import org.springframework.web.bind.annotation.*;
 public class DrivingController {
 
     private final DrivingService drivingService;
+
+    @GetMapping("/session")
+    @Operation(summary = "세션 목록 조회", description = "연도/월별 완료된 운전 세션 목록을 조회합니다.")
+    public ResponseEntity<ApiResponse<DrivingSessionListResponse>> getSessionList(
+            @RequestParam Integer year,
+            @RequestParam Integer month,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(
+                drivingService.getSessionList(userDetails.getUserId(), year, month)));
+    }
 
     @PostMapping("/record/start")
     @Operation(summary = "주행 시작", description = "새로운 운전 세션을 시작합니다.")

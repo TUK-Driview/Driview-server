@@ -7,11 +7,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface DrivingSessionRepository extends JpaRepository<DrivingSession, Long> {
 
     @Query("SELECT COUNT(ds) FROM DrivingSession ds WHERE ds.user.id = :userId AND ds.status = :status AND ds.startedAt >= :from AND ds.startedAt < :to")
     long countByUserIdAndStatusAndStartedAtBetween(
+            @Param("userId") Long userId,
+            @Param("status") DrivingStatus status,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
+
+    @Query("SELECT ds FROM DrivingSession ds WHERE ds.user.id = :userId AND ds.status = :status AND ds.startedAt >= :from AND ds.startedAt < :to ORDER BY ds.startedAt DESC")
+    List<DrivingSession> findByUserIdAndStatusAndStartedAtBetween(
             @Param("userId") Long userId,
             @Param("status") DrivingStatus status,
             @Param("from") LocalDateTime from,
