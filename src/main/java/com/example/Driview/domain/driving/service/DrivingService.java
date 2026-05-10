@@ -1,6 +1,8 @@
 package com.example.Driview.domain.driving.service;
 
 import com.example.Driview.domain.driving.dto.DrivingAnalysisStatusResponse;
+import com.example.Driview.domain.driving.dto.DrivingEndRequest;
+import com.example.Driview.domain.driving.dto.DrivingEndResponse;
 import com.example.Driview.domain.driving.dto.DrivingStartRequest;
 import com.example.Driview.domain.driving.dto.DrivingStartResponse;
 import com.example.Driview.domain.driving.entity.DrivingSession;
@@ -34,6 +36,28 @@ public class DrivingService {
         drivingSessionRepository.save(session);
 
         return new DrivingStartResponse(session.getId());
+    }
+
+    @Transactional
+    public DrivingEndResponse endDriving(Long sessionId, Long userId, DrivingEndRequest request) {
+        DrivingSession session = drivingSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.SESSION_ACCESS_DENIED);
+        }
+
+        session.complete(request.getEndLat(), request.getEndLng(), request.getEndedAt(), request.getDistanceKm());
+
+        int durationMin = session.getDurationSec() / 60;
+
+        return new DrivingEndResponse(
+                session.getId(),
+                session.getOrigin(),
+                session.getDestination(),
+                session.getDistanceKm(),
+                durationMin
+        );
     }
 
     @Transactional(readOnly = true)

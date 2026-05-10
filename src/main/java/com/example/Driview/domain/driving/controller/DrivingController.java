@@ -1,6 +1,8 @@
 package com.example.Driview.domain.driving.controller;
 
 import com.example.Driview.domain.driving.dto.DrivingAnalysisStatusResponse;
+import com.example.Driview.domain.driving.dto.DrivingEndRequest;
+import com.example.Driview.domain.driving.dto.DrivingEndResponse;
 import com.example.Driview.domain.driving.dto.DrivingStartRequest;
 import com.example.Driview.domain.driving.dto.DrivingStartResponse;
 import com.example.Driview.domain.driving.service.DrivingService;
@@ -32,6 +34,16 @@ public class DrivingController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("주행이 시작되었습니다.",
                         drivingService.startDriving(userDetails.getUserId(), request)));
+    }
+
+    @PatchMapping("/record/{sessionId}/end")
+    @Operation(summary = "주행 종료", description = "진행 중인 운전 세션을 종료합니다.")
+    public ResponseEntity<ApiResponse<DrivingEndResponse>> endDriving(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody DrivingEndRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("주행이 종료되었습니다.",
+                drivingService.endDriving(sessionId, userDetails.getUserId(), request)));
     }
 
     @GetMapping("/{sessionId}/status")
