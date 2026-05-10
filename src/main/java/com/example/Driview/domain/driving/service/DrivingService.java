@@ -1,11 +1,10 @@
 package com.example.Driview.domain.driving.service;
 
-import com.example.Driview.domain.driving.dto.DrivingAnalysisStatusResponse;
-import com.example.Driview.domain.driving.dto.DrivingEndRequest;
-import com.example.Driview.domain.driving.dto.DrivingEndResponse;
-import com.example.Driview.domain.driving.dto.DrivingStartRequest;
-import com.example.Driview.domain.driving.dto.DrivingStartResponse;
+import com.example.Driview.domain.driving.dto.*;
+import com.example.Driview.domain.driving.entity.DrivingReport;
 import com.example.Driview.domain.driving.entity.DrivingSession;
+import com.example.Driview.domain.driving.enums.DrivingStatus;
+import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.user.entity.User;
 import com.example.Driview.domain.user.repository.UserRepository;
@@ -15,11 +14,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class DrivingService {
 
     private final DrivingSessionRepository drivingSessionRepository;
+    private final DrivingReportRepository drivingReportRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -58,6 +61,33 @@ public class DrivingService {
                 session.getDistanceKm(),
                 durationMin
         );
+    }
+
+    @Transactional(readOnly = true)
+    public DrivingSessionListResponse getSessionList(Long userId, int year, int month) {
+        LocalDateTime from = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime to = from.plusMonths(1);
+
+        List<DrivingSession> sessions = drivingSessionRepository.findByUserIdAndStatusAndStartedAtBetween(
+                userId, DrivingStatus.COMPLETED, from, to);
+
+        List<DrivingSessionSummary> summaries = sessions.stream().map(session -> {
+            Integer score = drivingReportRepository.findBySession_Id(session.getId())
+                    .map(DrivingReport::getTotalScore)
+                    .orElse(null);
+            int durationMin = session.getDurationSec() != null ? session.getDurationSec() / 60 : 0;
+            return new DrivingSessionSummary(
+                    session.getId(),
+                    session.getStartedAt(),
+                    session.getOrigin(),
+                    session.getDestination(),
+                    session.getDistanceKm(),
+                    durationMin,
+                    score
+            );
+        }).toList();
+
+        return new DrivingSessionListResponse(year, month, summaries);
     }
 
     @Transactional(readOnly = true)
