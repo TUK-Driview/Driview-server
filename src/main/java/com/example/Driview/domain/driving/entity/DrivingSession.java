@@ -1,5 +1,6 @@
 package com.example.Driview.domain.driving.entity;
 
+import com.example.Driview.domain.driving.enums.AnalysisStatus;
 import com.example.Driview.domain.driving.enums.DrivingStatus;
 import com.example.Driview.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -35,6 +36,12 @@ public class DrivingSession {
     @Column(nullable = false)
     private DrivingStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AnalysisStatus analysisStatus;
+
+    private Integer analysisProgress;
+
     // ==================== 팩토리 메서드 ====================
 
     public static DrivingSession start(User user, String origin) {
@@ -43,6 +50,8 @@ public class DrivingSession {
         session.origin = origin;
         session.startedAt = LocalDateTime.now();
         session.status = DrivingStatus.IN_PROGRESS;
+        session.analysisStatus = AnalysisStatus.PENDING;
+        session.analysisProgress = 0;
         return session;
     }
 
@@ -64,8 +73,13 @@ public class DrivingSession {
         this.status = DrivingStatus.FAILED;
     }
 
+    public void updateAnalysisStatus(AnalysisStatus analysisStatus, int progress) {
+        this.analysisStatus = analysisStatus;
+        this.analysisProgress = progress;
+    }
+
     // ==================== 상태 확인 메서드 ====================
 
     public boolean isInProgress() { return this.status == DrivingStatus.IN_PROGRESS; }
     public boolean isCompleted() { return this.status == DrivingStatus.COMPLETED; }
-    }
+}
