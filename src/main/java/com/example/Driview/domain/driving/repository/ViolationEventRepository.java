@@ -10,4 +10,6 @@ public interface ViolationEventRepository extends JpaRepository<ViolationEvent, 
 
     @Query("SELECT COUNT(v) FROM ViolationEvent v WHERE v.session.user.id = :userId AND v.type = :type")
     long countByUserIdAndType(@Param("userId") Long userId, @Param("type") ViolationType type);
+
+    long countBySession_IdAndType(Long sessionId, ViolationType type);
 }

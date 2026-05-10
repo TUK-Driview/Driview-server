@@ -4,8 +4,10 @@ import com.example.Driview.domain.driving.dto.*;
 import com.example.Driview.domain.driving.entity.DrivingReport;
 import com.example.Driview.domain.driving.entity.DrivingSession;
 import com.example.Driview.domain.driving.enums.DrivingStatus;
+import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
+import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.user.entity.User;
 import com.example.Driview.domain.user.repository.UserRepository;
 import com.example.Driview.global.common.exception.CustomException;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +26,16 @@ public class DrivingService {
 
     private final DrivingSessionRepository drivingSessionRepository;
     private final DrivingReportRepository drivingReportRepository;
+    private final ViolationEventRepository violationEventRepository;
     private final UserRepository userRepository;
+
+    private static final Map<String, String> GRADE_LABEL = Map.of(
+            "S", "EXCELLENT",
+            "A", "GOOD",
+            "B", "AVERAGE",
+            "C", "POOR",
+            "D", "VERY_POOR"
+    );
 
     @Transactional
     public DrivingStartResponse startDriving(Long userId, DrivingStartRequest request) {
@@ -88,6 +100,32 @@ public class DrivingService {
         }).toList();
 
         return new DrivingSessionListResponse(year, month, summaries);
+    }
+
+    @Transactional(readOnly = true)
+    public DrivingReportResponse getReport(Long sessionId, Long userId) {
+        DrivingSession session = drivingSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new CustomException(ErrorCode.SESSION_ACCESS_DENIED);
+        }
+
+        DrivingReport report = drivingReportRepository.findBySession_Id(sessionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
+
+        return new DrivingReportResponse(
+                sessionId,
+                report.getTotalScore(),
+                GRADE_LABEL.getOrDefault(report.getGrade(), report.getGrade()),
+                report.getLaneScore(),
+                report.getAttentionScore(),
+                report.getSpeedScore(),
+                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.LANE_DEPARTURE),
+                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.DROWSY),
+                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SPEEDING),
+                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SUDDEN_BRAKE)
+        );
     }
 
     @Transactional(readOnly = true)
