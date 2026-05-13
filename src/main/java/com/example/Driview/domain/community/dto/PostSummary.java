@@ -11,6 +11,7 @@ public class PostSummary {
     private Long postId;
     private String category;
     private String title;
+    private String content;
     private String nickname;
     private Integer likeCount;
     private Integer commentCount;

@@ -42,6 +42,7 @@ public class CommunityService {
                         p.getId(),
                         p.getCategory(),
                         p.getTitle(),
+                        p.getContent(),
                         p.getUser().getNickname(),
                         p.getLikeCount(),
                         p.getCommentCount(),
