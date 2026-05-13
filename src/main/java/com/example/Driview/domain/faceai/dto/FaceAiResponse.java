@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 public class FaceAiResponse {
     private String sessionId;
-    private Integer yawn_Count;
-    private Double duration_Sec;
+    private Integer yawn_count;
+    private Double duration_sec;
     private List<DrowsinessEvent> drowsinessEvents;
 }
