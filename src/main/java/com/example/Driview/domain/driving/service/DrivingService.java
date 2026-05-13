@@ -8,6 +8,8 @@ import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
+import com.example.Driview.domain.faceai.entity.FaceAiResult;
+import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
 import com.example.Driview.domain.user.entity.User;
 import com.example.Driview.domain.user.repository.UserRepository;
 import com.example.Driview.global.common.exception.CustomException;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +32,7 @@ public class DrivingService {
     private final DrivingReportRepository drivingReportRepository;
     private final ViolationEventRepository violationEventRepository;
     private final UserRepository userRepository;
+    private final FaceAiResultRepository faceAiResultRepository;
 
     private static final Map<String, String> GRADE_LABEL = Map.of(
             "S", "EXCELLENT",
@@ -152,6 +156,14 @@ public class DrivingService {
         DrivingReport report = drivingReportRepository.findBySession_Id(sessionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
 
+        FaceAiResult faceAiResult = faceAiResultRepository.findBySession_Id(sessionId).orElse(null);
+
+        List<DrowsinessEventResponse> drowsinessEvents = faceAiResult != null
+                ? faceAiResult.getEvents().stream()
+                        .map(e -> new DrowsinessEventResponse(e.getTimestampSec(), e.getType()))
+                        .toList()
+                : Collections.emptyList();
+
         return new DrivingReportResponse(
                 sessionId,
                 report.getTotalScore(),
@@ -162,7 +174,10 @@ public class DrivingService {
                 violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.LANE_DEPARTURE),
                 violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.DROWSY),
                 violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SPEEDING),
-                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SUDDEN_BRAKE)
+                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SUDDEN_BRAKE),
+                faceAiResult != null ? faceAiResult.getYawnCount() : null,
+                faceAiResult != null ? faceAiResult.getDurationSec() : null,
+                drowsinessEvents
         );
     }
 

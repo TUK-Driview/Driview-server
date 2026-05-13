@@ -4,6 +4,7 @@ import com.example.Driview.domain.driving.enums.DrivingStatus;
 import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
+import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
 import com.example.Driview.domain.user.entity.User;
 import com.example.Driview.domain.user.repository.UserRepository;
@@ -22,6 +23,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final DrivingSessionRepository drivingSessionRepository;
     private final ViolationEventRepository violationEventRepository;
+    private final FaceAiResultRepository faceAiResultRepository;
 
     @Transactional(readOnly = true)
     public UserStatsResponse getStats(Long userId) {
@@ -37,13 +39,16 @@ public class UserService {
         long laneDepartureCount = violationEventRepository.countByUserIdAndType(userId, ViolationType.LANE_DEPARTURE);
         long drowsyCount = violationEventRepository.countByUserIdAndType(userId, ViolationType.DROWSY);
 
+        long totalYawnCount = faceAiResultRepository.sumYawnCountByUserId(userId);
+
         return new UserStatsResponse(
                 user.getAvgScore(),
                 user.getTotalDrives(),
                 user.getTotalKm(),
                 monthlyDrives,
                 laneDepartureCount,
-                drowsyCount
+                drowsyCount,
+                totalYawnCount
         );
     }
 }

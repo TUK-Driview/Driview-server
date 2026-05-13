@@ -12,4 +12,5 @@ public class UserStatsResponse {
     private long monthlyDrives;
     private long laneDepartureCount;
     private long drowsyCount;
+    private long totalYawnCount;
 }
