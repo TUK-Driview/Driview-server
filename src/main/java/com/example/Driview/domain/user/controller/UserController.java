@@ -2,6 +2,7 @@ package com.example.Driview.domain.user.controller;
 
 import com.example.Driview.domain.user.dto.MyPostListResponse;
 import com.example.Driview.domain.user.dto.NotificationSettingResponse;
+import com.example.Driview.domain.user.dto.NotificationSettingUpdateRequest;
 import com.example.Driview.domain.user.dto.UserBadgeResponse;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
@@ -13,9 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,6 +31,15 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.success("프로필 조회 성공",
                 userService.getProfile(userDetails.getUserId())));
+    }
+
+    @PatchMapping("/me/notification-settings")
+    @Operation(summary = "알림 설정 수정", description = "전달한 필드만 수정, 나머지는 기존 값 유지")
+    public ResponseEntity<ApiResponse<NotificationSettingResponse>> updateNotificationSettings(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody NotificationSettingUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("알림 설정 수정 성공",
+                userService.updateNotificationSettings(userDetails.getUserId(), request)));
     }
 
     @GetMapping("/me/notification-settings")

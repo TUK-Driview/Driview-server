@@ -16,6 +16,7 @@ import com.example.Driview.domain.user.dto.BadgeSummary;
 import com.example.Driview.domain.user.dto.CurrentBadgeResponse;
 import com.example.Driview.domain.user.dto.MyPostListResponse;
 import com.example.Driview.domain.user.dto.NotificationSettingResponse;
+import com.example.Driview.domain.user.dto.NotificationSettingUpdateRequest;
 import com.example.Driview.domain.user.dto.UserBadgeResponse;
 import com.example.Driview.domain.user.dto.MyPostSummary;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
@@ -45,6 +46,32 @@ public class UserService {
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
     private final NotificationSettingRepository notificationSettingRepository;
+
+    @Transactional
+    public NotificationSettingResponse updateNotificationSettings(Long userId, NotificationSettingUpdateRequest request) {
+        NotificationSetting setting = notificationSettingRepository.findByUser_Id(userId)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                    return notificationSettingRepository.save(NotificationSetting.createDefault(user));
+                });
+
+        setting.patch(
+                request.getDriveReportAlert(),
+                request.getDrowsinessAlert(),
+                request.getCommunityCommentAlert(),
+                request.getCommunityLikeAlert(),
+                request.getMarketingAlert()
+        );
+
+        return new NotificationSettingResponse(
+                setting.getDriveReportAlert(),
+                setting.getDrowsinessAlert(),
+                setting.getCommunityCommentAlert(),
+                setting.getCommunityLikeAlert(),
+                setting.getMarketingAlert()
+        );
+    }
 
     @Transactional(readOnly = true)
     public NotificationSettingResponse getNotificationSettings(Long userId) {
