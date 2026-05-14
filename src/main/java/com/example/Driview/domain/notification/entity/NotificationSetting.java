@@ -20,31 +20,35 @@ public class NotificationSetting {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private Boolean driveReport = true;
-    private Boolean communityReply = true;
-    private Boolean badgeAcquired = true;
+    private Boolean driveReportAlert = true;
+    private Boolean drowsinessAlert = true;
+    private Boolean communityCommentAlert = true;
+    private Boolean communityLikeAlert = false;
+    private Boolean marketingAlert = false;
 
     // ==================== 팩토리 메서드 ====================
 
     public static NotificationSetting createDefault(User user) {
         NotificationSetting setting = new NotificationSetting();
         setting.user = user;
-        setting.driveReport = true;
-        setting.communityReply = true;
-        setting.badgeAcquired = true;
+        setting.driveReportAlert = true;
+        setting.drowsinessAlert = true;
+        setting.communityCommentAlert = true;
+        setting.communityLikeAlert = false;
+        setting.marketingAlert = false;
         return setting;
     }
 
     // ==================== 비즈니스 메서드 ====================
 
-    public void updateDriveReport(boolean enabled) { this.driveReport = enabled; }
-    public void updateCommunityReply(boolean enabled) { this.communityReply = enabled; }
-    public void updateBadgeAcquired(boolean enabled) { this.badgeAcquired = enabled; }
-
-    public void updateAll(boolean driveReport, boolean communityReply, boolean badgeAcquired) {
-        this.driveReport = driveReport;
-        this.communityReply = communityReply;
-        this.badgeAcquired = badgeAcquired;
+    public void update(boolean driveReportAlert, boolean drowsinessAlert,
+                       boolean communityCommentAlert, boolean communityLikeAlert,
+                       boolean marketingAlert) {
+        this.driveReportAlert = driveReportAlert;
+        this.drowsinessAlert = drowsinessAlert;
+        this.communityCommentAlert = communityCommentAlert;
+        this.communityLikeAlert = communityLikeAlert;
+        this.marketingAlert = marketingAlert;
     }
 }
 

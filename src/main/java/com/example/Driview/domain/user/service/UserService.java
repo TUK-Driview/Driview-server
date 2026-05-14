@@ -9,10 +9,13 @@ import com.example.Driview.domain.badge.entity.Badge;
 import com.example.Driview.domain.badge.entity.UserBadge;
 import com.example.Driview.domain.badge.repository.BadgeRepository;
 import com.example.Driview.domain.badge.repository.UserBadgeRepository;
+import com.example.Driview.domain.notification.entity.NotificationSetting;
+import com.example.Driview.domain.notification.repository.NotificationSettingRepository;
 import com.example.Driview.domain.community.repository.PostRepository;
 import com.example.Driview.domain.user.dto.BadgeSummary;
 import com.example.Driview.domain.user.dto.CurrentBadgeResponse;
 import com.example.Driview.domain.user.dto.MyPostListResponse;
+import com.example.Driview.domain.user.dto.NotificationSettingResponse;
 import com.example.Driview.domain.user.dto.UserBadgeResponse;
 import com.example.Driview.domain.user.dto.MyPostSummary;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
@@ -41,6 +44,25 @@ public class UserService {
     private final PostRepository postRepository;
     private final BadgeRepository badgeRepository;
     private final UserBadgeRepository userBadgeRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
+
+    @Transactional(readOnly = true)
+    public NotificationSettingResponse getNotificationSettings(Long userId) {
+        NotificationSetting setting = notificationSettingRepository.findByUser_Id(userId)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+                    return notificationSettingRepository.save(NotificationSetting.createDefault(user));
+                });
+
+        return new NotificationSettingResponse(
+                setting.getDriveReportAlert(),
+                setting.getDrowsinessAlert(),
+                setting.getCommunityCommentAlert(),
+                setting.getCommunityLikeAlert(),
+                setting.getMarketingAlert()
+        );
+    }
 
     @Transactional(readOnly = true)
     public UserBadgeResponse getMyBadges(Long userId) {
