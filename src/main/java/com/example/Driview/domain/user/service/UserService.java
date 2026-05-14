@@ -5,8 +5,15 @@ import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
+import com.example.Driview.domain.badge.entity.Badge;
+import com.example.Driview.domain.badge.entity.UserBadge;
+import com.example.Driview.domain.badge.repository.BadgeRepository;
+import com.example.Driview.domain.badge.repository.UserBadgeRepository;
 import com.example.Driview.domain.community.repository.PostRepository;
+import com.example.Driview.domain.user.dto.BadgeSummary;
+import com.example.Driview.domain.user.dto.CurrentBadgeResponse;
 import com.example.Driview.domain.user.dto.MyPostListResponse;
+import com.example.Driview.domain.user.dto.UserBadgeResponse;
 import com.example.Driview.domain.user.dto.MyPostSummary;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
@@ -19,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +39,35 @@ public class UserService {
     private final ViolationEventRepository violationEventRepository;
     private final FaceAiResultRepository faceAiResultRepository;
     private final PostRepository postRepository;
+    private final BadgeRepository badgeRepository;
+    private final UserBadgeRepository userBadgeRepository;
+
+    @Transactional(readOnly = true)
+    public UserBadgeResponse getMyBadges(Long userId) {
+        // 유저가 획득한 뱃지 ID 집합
+        List<UserBadge> userBadges = userBadgeRepository.findByUser_Id(userId);
+        Set<Long> acquiredIds = userBadges.stream()
+                .map(ub -> ub.getBadge().getId())
+                .collect(Collectors.toSet());
+
+        // 가장 최근 획득한 뱃지 → currentBadge
+        CurrentBadgeResponse currentBadge = userBadgeRepository
+                .findTopByUser_IdOrderByAcquiredAtDesc(userId)
+                .map(ub -> new CurrentBadgeResponse(
+                        ub.getBadge().getId(),
+                        ub.getBadge().getName(),
+                        ub.getBadge().getDescription(),
+                        ub.getAcquiredAt()
+                ))
+                .orElse(null);
+
+        // 전체 뱃지 목록 + 획득 여부
+        List<BadgeSummary> allBadges = badgeRepository.findAll().stream()
+                .map(b -> new BadgeSummary(b.getId(), b.getName(), acquiredIds.contains(b.getId())))
+                .toList();
+
+        return new UserBadgeResponse(currentBadge, allBadges);
+    }
 
     @Transactional(readOnly = true)
     public MyPostListResponse getMyPosts(Long userId) {

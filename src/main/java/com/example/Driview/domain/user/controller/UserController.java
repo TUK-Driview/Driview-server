@@ -1,6 +1,7 @@
 package com.example.Driview.domain.user.controller;
 
 import com.example.Driview.domain.user.dto.MyPostListResponse;
+import com.example.Driview.domain.user.dto.UserBadgeResponse;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
 import com.example.Driview.domain.user.service.UserService;
@@ -29,6 +30,14 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.success("프로필 조회 성공",
                 userService.getProfile(userDetails.getUserId())));
+    }
+
+    @GetMapping("/me/badge")
+    @Operation(summary = "뱃지 조회", description = "현재 뱃지 및 전체 뱃지 획득 현황을 조회합니다.")
+    public ResponseEntity<ApiResponse<UserBadgeResponse>> getMyBadges(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success("뱃지 조회 성공",
+                userService.getMyBadges(userDetails.getUserId())));
     }
 
     @GetMapping("/posts")
