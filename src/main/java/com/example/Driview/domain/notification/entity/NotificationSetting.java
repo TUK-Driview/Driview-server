@@ -50,5 +50,15 @@ public class NotificationSetting {
         this.communityLikeAlert = communityLikeAlert;
         this.marketingAlert = marketingAlert;
     }
+
+    public void patch(Boolean driveReportAlert, Boolean drowsinessAlert,
+                      Boolean communityCommentAlert, Boolean communityLikeAlert,
+                      Boolean marketingAlert) {
+        if (driveReportAlert != null) this.driveReportAlert = driveReportAlert;
+        if (drowsinessAlert != null) this.drowsinessAlert = drowsinessAlert;
+        if (communityCommentAlert != null) this.communityCommentAlert = communityCommentAlert;
+        if (communityLikeAlert != null) this.communityLikeAlert = communityLikeAlert;
+        if (marketingAlert != null) this.marketingAlert = marketingAlert;
+    }
 }
 
