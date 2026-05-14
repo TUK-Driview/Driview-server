@@ -1,5 +1,6 @@
 package com.example.Driview.domain.user.controller;
 
+import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
 import com.example.Driview.domain.user.service.UserService;
 import com.example.Driview.global.common.response.ApiResponse;
@@ -20,6 +21,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+
+    @GetMapping("/me")
+    @Operation(summary = "내 프로필 조회", description = "현재 로그인한 사용자의 프로필 정보를 조회합니다.")
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success("프로필 조회 성공",
+                userService.getProfile(userDetails.getUserId())));
+    }
 
     @GetMapping("/me/stats")
     @Operation(summary = "홈 통계 조회", description = "현재 로그인한 사용자의 운전 통계를 조회합니다.")

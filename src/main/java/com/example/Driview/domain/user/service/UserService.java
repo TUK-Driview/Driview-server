@@ -5,6 +5,7 @@ import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
+import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
 import com.example.Driview.domain.user.entity.User;
 import com.example.Driview.domain.user.repository.UserRepository;
@@ -24,6 +25,22 @@ public class UserService {
     private final DrivingSessionRepository drivingSessionRepository;
     private final ViolationEventRepository violationEventRepository;
     private final FaceAiResultRepository faceAiResultRepository;
+
+    @Transactional(readOnly = true)
+    public UserProfileResponse getProfile(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getNickname(),
+                user.getEmail(),
+                user.getAvgScore(),
+                user.getTotalDrives(),
+                user.getTotalKm(),
+                user.getCreatedAt()
+        );
+    }
 
     @Transactional(readOnly = true)
     public UserStatsResponse getStats(Long userId) {
