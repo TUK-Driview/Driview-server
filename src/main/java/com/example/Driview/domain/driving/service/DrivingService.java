@@ -10,7 +10,6 @@ import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.entity.FaceAiResult;
 import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
-import com.example.Driview.domain.user.entity.User;
 import com.example.Driview.domain.user.repository.UserRepository;
 import com.example.Driview.global.common.exception.CustomException;
 import com.example.Driview.global.common.exception.ErrorCode;
@@ -31,8 +30,8 @@ public class DrivingService {
     private final DrivingSessionRepository drivingSessionRepository;
     private final DrivingReportRepository drivingReportRepository;
     private final ViolationEventRepository violationEventRepository;
-    private final UserRepository userRepository;
     private final FaceAiResultRepository faceAiResultRepository;
+    private final UserRepository userRepository;
 
     private static final Map<String, String> GRADE_LABEL = Map.of(
             "S", "EXCELLENT",
@@ -52,44 +51,6 @@ public class DrivingService {
 
     private static final Set<ViolationType> DURATION_TYPES = Set.of(ViolationType.DROWSY);
 
-    @Transactional
-    public DrivingStartResponse startDriving(Long userId, DrivingStartRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        DrivingSession session = DrivingSession.start(
-                user,
-                request.getStartLat(),
-                request.getStartLng(),
-                request.getStartedAt()
-        );
-        drivingSessionRepository.save(session);
-
-        return new DrivingStartResponse(session.getId());
-    }
-
-    @Transactional
-    public DrivingEndResponse endDriving(Long sessionId, Long userId, DrivingEndRequest request) {
-        DrivingSession session = drivingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
-
-        if (!session.getUser().getId().equals(userId)) {
-            throw new CustomException(ErrorCode.SESSION_ACCESS_DENIED);
-        }
-
-        session.complete(request.getEndLat(), request.getEndLng(), request.getEndedAt(), request.getDistanceKm());
-
-        int durationMin = session.getDurationSec() / 60;
-
-        return new DrivingEndResponse(
-                session.getId(),
-                session.getOrigin(),
-                session.getDestination(),
-                session.getDistanceKm(),
-                durationMin
-        );
-    }
-
     @Transactional(readOnly = true)
     public DrivingSessionListResponse getSessionList(Long userId, int year, int month) {
         LocalDateTime from = LocalDateTime.of(year, month, 1, 0, 0);
@@ -106,9 +67,6 @@ public class DrivingService {
             return new DrivingSessionSummary(
                     session.getId(),
                     session.getStartedAt(),
-                    session.getOrigin(),
-                    session.getDestination(),
-                    session.getDistanceKm(),
                     durationMin,
                     score
             );
