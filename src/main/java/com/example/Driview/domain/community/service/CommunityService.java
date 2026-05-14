@@ -30,6 +30,30 @@ public class CommunityService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
+    public PostDetailResponse getPost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+
+        if (post.isDeleted()) {
+            throw new CustomException(ErrorCode.POST_NOT_FOUND);
+        }
+
+        boolean isLiked = postLikeRepository.existsByPost_IdAndUser_Id(postId, userId);
+
+        return new PostDetailResponse(
+                post.getId(),
+                post.getCategory(),
+                post.getTitle(),
+                post.getContent(),
+                post.getUser().getNickname(),
+                post.getLikeCount(),
+                post.getCommentCount(),
+                isLiked,
+                post.getCreatedAt()
+        );
+    }
+
+    @Transactional(readOnly = true)
     public PostListResponse getPosts(String category, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
