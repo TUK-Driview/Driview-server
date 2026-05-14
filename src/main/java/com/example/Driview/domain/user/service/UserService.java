@@ -5,6 +5,9 @@ import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
+import com.example.Driview.domain.community.repository.PostRepository;
+import com.example.Driview.domain.user.dto.MyPostListResponse;
+import com.example.Driview.domain.user.dto.MyPostSummary;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
 import com.example.Driview.domain.user.entity.User;
@@ -25,6 +28,24 @@ public class UserService {
     private final DrivingSessionRepository drivingSessionRepository;
     private final ViolationEventRepository violationEventRepository;
     private final FaceAiResultRepository faceAiResultRepository;
+    private final PostRepository postRepository;
+
+    @Transactional(readOnly = true)
+    public MyPostListResponse getMyPosts(Long userId) {
+        var posts = postRepository.findByUser_IdAndDeletedAtIsNullOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(p -> new MyPostSummary(
+                        p.getId(),
+                        p.getCategory(),
+                        p.getTitle(),
+                        p.getContent(),
+                        p.getLikeCount(),
+                        p.getCommentCount(),
+                        p.getCreatedAt()
+                )).toList();
+
+        return new MyPostListResponse(posts.size(), posts);
+    }
 
     @Transactional(readOnly = true)
     public UserProfileResponse getProfile(Long userId) {
