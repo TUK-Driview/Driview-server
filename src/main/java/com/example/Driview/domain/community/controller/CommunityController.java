@@ -23,6 +23,15 @@ public class CommunityController {
 
     private final CommunityService communityService;
 
+    @GetMapping("/{postId}")
+    @Operation(summary = "게시글 상세 조회")
+    public ResponseEntity<ApiResponse<PostDetailResponse>> getPost(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success(
+                communityService.getPost(postId, userDetails.getUserId())));
+    }
+
     @GetMapping
     @Operation(summary = "게시글 목록 조회", description = "category 파라미터로 필터링 가능, page/size로 페이징")
     public ResponseEntity<ApiResponse<PostListResponse>> getPosts(
