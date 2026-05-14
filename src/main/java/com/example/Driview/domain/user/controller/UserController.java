@@ -1,6 +1,7 @@
 package com.example.Driview.domain.user.controller;
 
 import com.example.Driview.domain.user.dto.MyPostListResponse;
+import com.example.Driview.domain.user.dto.NotificationSettingResponse;
 import com.example.Driview.domain.user.dto.UserBadgeResponse;
 import com.example.Driview.domain.user.dto.UserProfileResponse;
 import com.example.Driview.domain.user.dto.UserStatsResponse;
@@ -30,6 +31,14 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.success("프로필 조회 성공",
                 userService.getProfile(userDetails.getUserId())));
+    }
+
+    @GetMapping("/me/notification-settings")
+    @Operation(summary = "알림 설정 조회", description = "현재 로그인한 사용자의 알림 설정을 조회합니다.")
+    public ResponseEntity<ApiResponse<NotificationSettingResponse>> getNotificationSettings(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.success("알림 설정 조회 성공",
+                userService.getNotificationSettings(userDetails.getUserId())));
     }
 
     @GetMapping("/me/badge")
