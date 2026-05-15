@@ -1,5 +1,6 @@
 package com.example.Driview.domain.faceai.controller;
 
+import com.example.Driview.domain.faceai.dto.FaceAiAnalysisResponse;
 import com.example.Driview.domain.faceai.dto.FaceAiResponse;
 import com.example.Driview.domain.faceai.service.FaceAiService;
 import com.example.Driview.global.common.exception.CustomException;
@@ -31,14 +32,13 @@ public class FaceAiController {
 
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "운전자 영상 분석", description = "운전자 영상을 Face AI 서버로 전달하여 졸음 이벤트를 분석합니다.")
-    public CompletableFuture<ResponseEntity<ApiResponse<FaceAiResponse>>> analyze(
+    public CompletableFuture<ResponseEntity<ApiResponse<FaceAiAnalysisResponse>>> analyze(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam("sessionId") Long sessionId,
             @RequestPart("file") MultipartFile file) {
 
         validateVideoExtension(file.getOriginalFilename());
 
-        return faceAiService.analyzeVideo(file, sessionId)
+        return faceAiService.analyzeVideo(file, userDetails.getUserId())
                 .thenApply(result -> ResponseEntity.ok(ApiResponse.success("영상 분석이 완료되었습니다.", result)));
     }
 

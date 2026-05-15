@@ -6,13 +6,10 @@ import com.example.Driview.global.common.response.ApiResponse;
 import com.example.Driview.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/driving")
@@ -30,26 +27,6 @@ public class DrivingController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(ApiResponse.success(
                 drivingService.getSessionList(userDetails.getUserId(), year, month)));
-    }
-
-    @PostMapping("/record/start")
-    @Operation(summary = "주행 시작", description = "새로운 운전 세션을 시작합니다.")
-    public ResponseEntity<ApiResponse<DrivingStartResponse>> startDriving(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody DrivingStartRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("주행이 시작되었습니다.",
-                        drivingService.startDriving(userDetails.getUserId(), request)));
-    }
-
-    @PatchMapping("/record/{sessionId}/end")
-    @Operation(summary = "주행 종료", description = "진행 중인 운전 세션을 종료합니다.")
-    public ResponseEntity<ApiResponse<DrivingEndResponse>> endDriving(
-            @PathVariable Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody DrivingEndRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("주행이 종료되었습니다.",
-                drivingService.endDriving(sessionId, userDetails.getUserId(), request)));
     }
 
     @GetMapping("/{sessionId}/timeline")

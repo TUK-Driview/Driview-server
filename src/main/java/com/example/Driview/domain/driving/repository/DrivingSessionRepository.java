@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface DrivingSessionRepository extends JpaRepository<DrivingSession, Long> {
 
@@ -26,4 +27,6 @@ public interface DrivingSessionRepository extends JpaRepository<DrivingSession, 
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+
+    Optional<DrivingSession> findByUser_IdAndStartedAt(Long userId, LocalDateTime startedAt);
 }
