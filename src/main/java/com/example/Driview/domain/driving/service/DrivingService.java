@@ -10,8 +10,6 @@ import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.entity.FaceAiResult;
 import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
-import com.example.Driview.domain.user.entity.User;
-import com.example.Driview.domain.user.repository.UserRepository;
 import com.example.Driview.global.common.exception.CustomException;
 import com.example.Driview.global.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +29,6 @@ public class DrivingService {
     private final DrivingSessionRepository drivingSessionRepository;
     private final DrivingReportRepository drivingReportRepository;
     private final ViolationEventRepository violationEventRepository;
-    private final UserRepository userRepository;
     private final FaceAiResultRepository faceAiResultRepository;
 
     private static final Map<String, String> GRADE_LABEL = Map.of(
@@ -52,44 +49,6 @@ public class DrivingService {
 
     private static final Set<ViolationType> DURATION_TYPES = Set.of(ViolationType.DROWSY);
 
-    @Transactional
-    public DrivingStartResponse startDriving(Long userId, DrivingStartRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        DrivingSession session = DrivingSession.start(
-                user,
-                request.getStartLat(),
-                request.getStartLng(),
-                request.getStartedAt()
-        );
-        drivingSessionRepository.save(session);
-
-        return new DrivingStartResponse(session.getId());
-    }
-
-    @Transactional
-    public DrivingEndResponse endDriving(Long sessionId, Long userId, DrivingEndRequest request) {
-        DrivingSession session = drivingSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.SESSION_NOT_FOUND));
-
-        if (!session.getUser().getId().equals(userId)) {
-            throw new CustomException(ErrorCode.SESSION_ACCESS_DENIED);
-        }
-
-        session.complete(request.getEndLat(), request.getEndLng(), request.getEndedAt(), request.getDistanceKm());
-
-        int durationMin = session.getDurationSec() / 60;
-
-        return new DrivingEndResponse(
-                session.getId(),
-                session.getOrigin(),
-                session.getDestination(),
-                session.getDistanceKm(),
-                durationMin
-        );
-    }
-
     @Transactional(readOnly = true)
     public DrivingSessionListResponse getSessionList(Long userId, int year, int month) {
         LocalDateTime from = LocalDateTime.of(year, month, 1, 0, 0);
@@ -106,9 +65,6 @@ public class DrivingService {
             return new DrivingSessionSummary(
                     session.getId(),
                     session.getStartedAt(),
-                    session.getOrigin(),
-                    session.getDestination(),
-                    session.getDistanceKm(),
                     durationMin,
                     score
             );
@@ -153,8 +109,7 @@ public class DrivingService {
             throw new CustomException(ErrorCode.SESSION_ACCESS_DENIED);
         }
 
-        DrivingReport report = drivingReportRepository.findBySession_Id(sessionId)
-                .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
+        DrivingReport report = drivingReportRepository.findBySession_Id(sessionId).orElse(null);
 
         FaceAiResult faceAiResult = faceAiResultRepository.findBySession_Id(sessionId).orElse(null);
 
@@ -166,15 +121,15 @@ public class DrivingService {
 
         return new DrivingReportResponse(
                 sessionId,
-                report.getTotalScore(),
-                GRADE_LABEL.getOrDefault(report.getGrade(), report.getGrade()),
-                report.getLaneScore(),
-                report.getAttentionScore(),
-                report.getSpeedScore(),
-                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.LANE_DEPARTURE),
-                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.DROWSY),
-                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SPEEDING),
-                violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SUDDEN_BRAKE),
+                report != null ? report.getTotalScore() : null,
+                report != null ? GRADE_LABEL.getOrDefault(report.getGrade(), report.getGrade()) : null,
+                report != null ? report.getLaneScore() : null,
+                report != null ? report.getAttentionScore() : null,
+                report != null ? report.getSpeedScore() : null,
+                report != null ? violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.LANE_DEPARTURE) : null,
+                report != null ? violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.DROWSY) : null,
+                report != null ? violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SPEEDING) : null,
+                report != null ? violationEventRepository.countBySession_IdAndType(sessionId, ViolationType.SUDDEN_BRAKE) : null,
                 faceAiResult != null ? faceAiResult.getYawnCount() : null,
                 faceAiResult != null ? faceAiResult.getDurationSec() : null,
                 drowsinessEvents

@@ -10,9 +10,6 @@ import java.time.LocalDateTime;
 public class DrivingSessionSummary {
     private Long sessionId;
     private LocalDateTime startedAt;
-    private String departure;
-    private String destination;
-    private Float distanceKm;
     private Integer durationMin;
     private Integer score;
 }

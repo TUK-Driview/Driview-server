@@ -47,8 +47,9 @@ public class DrivingReport {
 
     // ==================== 내부 계산 메서드 ====================
 
+    // 각 세부 점수는 100점에서 차감 방식으로 계산
     private static int calcTotalScore(int lane, int attention, int speed, int accel) {
-        return (lane + attention + speed + accel) / 4;
+        return Math.max(0, (lane + attention + speed + accel) / 4);
     }
 
     private static String calcGrade(int score) {

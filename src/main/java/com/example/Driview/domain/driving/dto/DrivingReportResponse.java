@@ -14,10 +14,10 @@ public class DrivingReportResponse {
     private Integer laneScore;
     private Integer focusScore;
     private Integer speedScore;
-    private long laneViolationCount;
-    private long drowsinessCount;
-    private long speedViolationCount;
-    private long hardBrakingCount;
+    private Long laneViolationCount;
+    private Long drowsinessCount;
+    private Long speedViolationCount;
+    private Long hardBrakingCount;
     // Face AI 분석 결과
     private Integer yawn_count;
     private Double duration_sec;

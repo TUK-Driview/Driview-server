@@ -25,16 +25,9 @@ public class DrivingSession {
 
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
-    private String origin;
-    private String destination;
-    private Float distanceKm;
     private Integer durationSec;
     private String frontVideoUrl;
     private String driverVideoUrl;
-    private Double startLat;
-    private Double startLng;
-    private Double endLat;
-    private Double endLng;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -48,13 +41,11 @@ public class DrivingSession {
 
     // ==================== 팩토리 메서드 ====================
 
-    public static DrivingSession start(User user, Double startLat, Double startLng, LocalDateTime startedAt) {
+    public static DrivingSession create(User user, LocalDateTime startedAt) {
         DrivingSession session = new DrivingSession();
         session.user = user;
-        session.startLat = startLat;
-        session.startLng = startLng;
         session.startedAt = startedAt;
-        session.status = DrivingStatus.IN_PROGRESS;
+        session.status = DrivingStatus.COMPLETED;
         session.analysisStatus = AnalysisStatus.PENDING;
         session.analysisProgress = 0;
         return session;
@@ -62,18 +53,9 @@ public class DrivingSession {
 
     // ==================== 비즈니스 메서드 ====================
 
-    public void complete(Double endLat, Double endLng, LocalDateTime endedAt, Float distanceKm) {
-        this.endLat = endLat;
-        this.endLng = endLng;
-        this.endedAt = endedAt;
-        this.distanceKm = distanceKm;
-        this.durationSec = (int) java.time.Duration.between(this.startedAt, endedAt).getSeconds();
-        this.status = DrivingStatus.COMPLETED;
-    }
-
-    public void fail() {
-        this.endedAt = LocalDateTime.now();
-        this.status = DrivingStatus.FAILED;
+    public void updateDuration(int durationSec) {
+        this.durationSec = durationSec;
+        this.endedAt = this.startedAt.plusSeconds(durationSec);
     }
 
     public void updateAnalysisStatus(AnalysisStatus analysisStatus, int progress) {
@@ -81,8 +63,12 @@ public class DrivingSession {
         this.analysisProgress = progress;
     }
 
+    public void fail() {
+        this.endedAt = LocalDateTime.now();
+        this.status = DrivingStatus.FAILED;
+    }
+
     // ==================== 상태 확인 메서드 ====================
 
-    public boolean isInProgress() { return this.status == DrivingStatus.IN_PROGRESS; }
     public boolean isCompleted() { return this.status == DrivingStatus.COMPLETED; }
 }
