@@ -38,7 +38,10 @@ public enum ErrorCode implements BaseErrorCode {
 
     // FACEAI
     INVALID_VIDEO_FORMAT(HttpStatus.BAD_REQUEST, "FACEAI001", "지원하지 않는 영상 형식입니다. (.mp4, .avi, .mov, .mkv 만 허용)"),
-    FACEAI_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "FACEAI002", "Face AI 서버와 통신 중 오류가 발생했습니다.");
+    FACEAI_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "FACEAI002", "Face AI 서버와 통신 중 오류가 발생했습니다."),
+
+    // DRIVEAI
+    DRIVEAI_SERVER_ERROR(HttpStatus.BAD_GATEWAY, "DRIVEAI001", "Drive AI 서버와 통신 중 오류가 발생했습니다.");
 
     private final HttpStatus status;
     private final String code;
