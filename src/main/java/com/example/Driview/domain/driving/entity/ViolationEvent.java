@@ -56,6 +56,15 @@ public class ViolationEvent {
         return event;
     }
 
+    public static ViolationEvent ofLaneDeparture(DrivingSession session, int occurredAtSec) {
+        ViolationEvent event = new ViolationEvent();
+        event.session = session;
+        event.type = ViolationType.LANE_DEPARTURE;
+        event.occurredAtSec = occurredAtSec;
+        event.severity = 2;
+        return event;
+    }
+
     // ==================== 상태 확인 메서드 ====================
 
     public boolean isHighSeverity() { return this.severity != null && this.severity >= 3; }

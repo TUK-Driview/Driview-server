@@ -13,4 +13,11 @@ public class WebClientConfig {
                 .baseUrl("http://54.206.87.180:8000")
                 .build();
     }
+
+    @Bean
+    public WebClient driveAiWebClient() {
+        return WebClient.builder()
+                .baseUrl("http://3.26.203.117:8000")
+                .build();
+    }
 }
