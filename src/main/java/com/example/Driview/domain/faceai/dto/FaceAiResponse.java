@@ -10,6 +10,7 @@ import java.util.List;
 public class FaceAiResponse {
     private String filename;
     private Integer yawn_count;
+    private List<Double> yawn_timestamps;
     private Double duration_sec;
     private List<DrowsinessEvent> drowsinessEvents;
 }

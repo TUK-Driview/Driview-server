@@ -1,7 +1,9 @@
 package com.example.Driview.domain.faceai.service;
 
 import com.example.Driview.domain.driving.entity.DrivingSession;
+import com.example.Driview.domain.driving.entity.ViolationEvent;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
+import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.dto.FaceAiAnalysisResponse;
 import com.example.Driview.domain.faceai.dto.FaceAiResponse;
 import com.example.Driview.domain.faceai.entity.FaceAiEvent;
@@ -23,6 +25,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -32,10 +35,14 @@ public class FaceAiService {
 
     private static final DateTimeFormatter FILENAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
+    private static final int DROWSY_WINDOW_SEC = 600;
+    private static final int DROWSY_YAWN_THRESHOLD = 3;
+
     private final WebClient faceAiWebClient;
     private final UserRepository userRepository;
     private final DrivingSessionRepository drivingSessionRepository;
     private final FaceAiResultRepository faceAiResultRepository;
+    private final ViolationEventRepository violationEventRepository;
 
     public CompletableFuture<FaceAiAnalysisResponse> analyzeVideo(MultipartFile file, Long userId) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -54,6 +61,7 @@ public class FaceAiService {
                 .thenApply(result -> {
                     DrivingSession session = createOrFindSession(result.getFilename(), userId);
                     saveResult(result, session);
+                    saveDrowsyEvents(result.getYawn_timestamps(), session);
                     return new FaceAiAnalysisResponse(
                             session.getId(),
                             result.getYawn_count(),
@@ -84,6 +92,28 @@ public class FaceAiService {
             return LocalDateTime.parse(dateTimePart, FILENAME_FORMATTER);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INVALID_VIDEO_FORMAT);
+        }
+    }
+
+    private void saveDrowsyEvents(List<Double> yawnTimestamps, DrivingSession session) {
+        if (yawnTimestamps == null || yawnTimestamps.size() < DROWSY_YAWN_THRESHOLD) return;
+
+        List<Double> sorted = new ArrayList<>(yawnTimestamps);
+        Collections.sort(sorted);
+
+        int i = 0;
+        while (i <= sorted.size() - DROWSY_YAWN_THRESHOLD) {
+            double windowStart = sorted.get(i);
+            double thirdYawn = sorted.get(i + DROWSY_YAWN_THRESHOLD - 1);
+
+            if (thirdYawn - windowStart <= DROWSY_WINDOW_SEC) {
+                violationEventRepository.save(
+                        ViolationEvent.ofDrowsy(session, (int) thirdYawn)
+                );
+                i += DROWSY_YAWN_THRESHOLD;
+            } else {
+                i++;
+            }
         }
     }
 
