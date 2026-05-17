@@ -61,11 +61,10 @@ public class DrivingService {
             Integer score = drivingReportRepository.findBySession_Id(session.getId())
                     .map(DrivingReport::getTotalScore)
                     .orElse(null);
-            int durationMin = session.getDurationSec() != null ? session.getDurationSec() / 60 : 0;
             return new DrivingSessionSummary(
                     session.getId(),
                     session.getStartedAt(),
-                    durationMin,
+                    session.getDurationSec(),
                     score
             );
         }).toList();
