@@ -67,7 +67,7 @@ public class FaceAiService {
                     DrivingSession session = createOrFindSession(result.getFilename(), userId);
                     saveResult(result, session);
                     int drowsinessEventCount = saveDrowsyEvents(result.getYawn_timestamps(), session);
-                    saveOrUpdateReport(session, drowsinessEventCount);
+                    saveOrUpdateReport(session, drowsinessEventCount, userId);
                     return new FaceAiAnalysisResponse(
                             session.getId(),
                             result.getYawn_count(),
@@ -126,7 +126,7 @@ public class FaceAiService {
         return count;
     }
 
-    private void saveOrUpdateReport(DrivingSession session, int drowsinessEventCount) {
+    private void saveOrUpdateReport(DrivingSession session, int drowsinessEventCount, Long userId) {
         int attentionScore = Math.max(0, 100 - drowsinessEventCount * ATTENTION_DEDUCTION_PER_EVENT);
         DrivingReport report = drivingReportRepository.findBySession_Id(session.getId()).orElse(null);
 
@@ -138,13 +138,14 @@ public class FaceAiService {
         }
 
         // User 통계 업데이트 (평균 점수, 총 운행 횟수)
-        updateUserStats(session);
+        updateUserStats(userId);
     }
 
-    private void updateUserStats(DrivingSession session) {
-        User user = session.getUser();
-        float newAvgScore = drivingReportRepository.avgTotalScoreByUserId(user.getId());
-        int totalDrives = drivingReportRepository.countByUserId(user.getId());
+    private void updateUserStats(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        float newAvgScore = drivingReportRepository.avgTotalScoreByUserId(userId);
+        int totalDrives = drivingReportRepository.countByUserId(userId);
         user.setCalculatedStats(totalDrives, newAvgScore);
         userRepository.save(user);
     }

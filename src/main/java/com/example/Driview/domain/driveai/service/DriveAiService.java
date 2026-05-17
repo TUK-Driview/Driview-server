@@ -61,7 +61,7 @@ public class DriveAiService {
                     DrivingSession session = createOrFindSession(result.getFilename(), userId);
                     saveResult(result, session);
                     saveLaneDepartureEvents(result.getLane_departure_timestamps(), session);
-                    saveOrUpdateReport(session, result.getLane_departure_count());
+                    saveOrUpdateReport(session, result.getLane_departure_count(), userId);
                     return new DriveAiAnalysisResponse(
                             session.getId(),
                             result.getLane_departure_count(),
@@ -99,7 +99,7 @@ public class DriveAiService {
         }
     }
 
-    private void saveOrUpdateReport(DrivingSession session, int laneDepartureCount) {
+    private void saveOrUpdateReport(DrivingSession session, int laneDepartureCount, Long userId) {
         int laneScore = Math.max(0, 100 - laneDepartureCount * LANE_DEDUCTION_PER_DEPARTURE);
         DrivingReport report = drivingReportRepository.findBySession_Id(session.getId()).orElse(null);
 
@@ -111,13 +111,14 @@ public class DriveAiService {
         }
 
         // User 통계 업데이트 (평균 점수, 총 운행 횟수)
-        updateUserStats(session);
+        updateUserStats(userId);
     }
 
-    private void updateUserStats(DrivingSession session) {
-        User user = session.getUser();
-        float newAvgScore = drivingReportRepository.avgTotalScoreByUserId(user.getId());
-        int totalDrives = drivingReportRepository.countByUserId(user.getId());
+    private void updateUserStats(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        float newAvgScore = drivingReportRepository.avgTotalScoreByUserId(userId);
+        int totalDrives = drivingReportRepository.countByUserId(userId);
         user.setCalculatedStats(totalDrives, newAvgScore);
         userRepository.save(user);
     }
