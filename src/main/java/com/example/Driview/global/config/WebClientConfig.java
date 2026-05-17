@@ -17,7 +17,7 @@ public class WebClientConfig {
     @Bean
     public WebClient driveAiWebClient() {
         return WebClient.builder()
-                .baseUrl("http://3.26.203.117:8000")
+                .baseUrl("http://3.106.123.93:8000")
                 .build();
     }
 }
