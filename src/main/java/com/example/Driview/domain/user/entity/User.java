@@ -106,6 +106,12 @@ public class User extends BaseTimeEntity {
         this.avgScore = newAvgScore;
     }
 
+    // 계산된 값으로 직접 세팅 (재계산 시 사용)
+    public void setCalculatedStats(int totalDrives, float avgScore) {
+        this.totalDrives = totalDrives;
+        this.avgScore = avgScore;
+    }
+
     // ==================== 상태 확인 메서드 ====================
 
     public boolean isActive() { return this.status == UserStatus.ACTIVE; }

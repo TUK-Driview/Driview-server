@@ -104,13 +104,22 @@ public class DriveAiService {
         DrivingReport report = drivingReportRepository.findBySession_Id(session.getId()).orElse(null);
 
         if (report == null) {
-            // FaceAI 분석 전 → 주의집중 100 기본값으로 생성
             drivingReportRepository.save(DrivingReport.create(session, laneScore, 100, 100, 100));
         } else {
-            // FaceAI 분석 완료 후 → 차선준수 점수만 업데이트
             report.updateLaneScore(laneScore);
             drivingReportRepository.save(report);
         }
+
+        // User 통계 업데이트 (평균 점수, 총 운행 횟수)
+        updateUserStats(session);
+    }
+
+    private void updateUserStats(DrivingSession session) {
+        User user = session.getUser();
+        float newAvgScore = drivingReportRepository.avgTotalScoreByUserId(user.getId());
+        int totalDrives = drivingReportRepository.countByUserId(user.getId());
+        user.setCalculatedStats(totalDrives, newAvgScore);
+        userRepository.save(user);
     }
 
     private void saveResult(DriveAiResponse response, DrivingSession session) {
