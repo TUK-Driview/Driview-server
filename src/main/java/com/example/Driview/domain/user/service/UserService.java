@@ -2,6 +2,7 @@ package com.example.Driview.domain.user.service;
 
 import com.example.Driview.domain.driving.enums.DrivingStatus;
 import com.example.Driview.domain.driving.enums.ViolationType;
+import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.repository.FaceAiResultRepository;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final DrivingReportRepository drivingReportRepository;
     private final DrivingSessionRepository drivingSessionRepository;
     private final ViolationEventRepository violationEventRepository;
     private final FaceAiResultRepository faceAiResultRepository;
@@ -140,12 +142,15 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        float avgScore = drivingReportRepository.avgTotalScoreByUserId(userId);
+        int totalDriveCount = drivingReportRepository.countByUserId(userId);
+
         return new UserProfileResponse(
                 user.getId(),
                 user.getNickname(),
                 user.getEmail(),
-                user.getAvgScore(),
-                user.getTotalDrives(),
+                avgScore,
+                totalDriveCount,
                 user.getTotalKm(),
                 user.getCreatedAt()
         );
@@ -167,9 +172,12 @@ public class UserService {
 
         long totalYawnCount = faceAiResultRepository.sumYawnCountByUserId(userId);
 
+        float avgScore = drivingReportRepository.avgTotalScoreByUserId(userId);
+        int totalDriveCount = drivingReportRepository.countByUserId(userId);
+
         return new UserStatsResponse(
-                user.getAvgScore(),
-                user.getTotalDrives(),
+                avgScore,
+                totalDriveCount,
                 user.getTotalKm(),
                 monthlyDrives,
                 laneDepartureCount,
