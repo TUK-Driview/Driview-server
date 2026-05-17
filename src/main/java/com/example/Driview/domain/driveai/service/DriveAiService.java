@@ -90,7 +90,6 @@ public class DriveAiService {
     private void saveLaneDepartureEvents(List<Double> timestamps, DrivingSession session) {
         if (timestamps == null) return;
         for (Double ts : timestamps) {
-            ViolationEvent event = new ViolationEvent();
             violationEventRepository.save(ViolationEvent.ofLaneDeparture(session, ts.intValue()));
         }
     }
