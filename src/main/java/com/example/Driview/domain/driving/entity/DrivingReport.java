@@ -60,6 +60,20 @@ public class DrivingReport {
         return "D";
     }
 
+    // ==================== 점수 업데이트 메서드 ====================
+
+    public void updateLaneScore(int laneScore) {
+        this.laneScore = laneScore;
+        this.totalScore = calcTotalScore(this.laneScore, this.attentionScore, this.speedScore, this.accelScore);
+        this.grade = calcGrade(this.totalScore);
+    }
+
+    public void updateAttentionScore(int attentionScore) {
+        this.attentionScore = attentionScore;
+        this.totalScore = calcTotalScore(this.laneScore, this.attentionScore, this.speedScore, this.accelScore);
+        this.grade = calcGrade(this.totalScore);
+    }
+
     // ==================== 상태 확인 메서드 ====================
 
     public boolean isPerfect() { return "S".equals(this.grade); }

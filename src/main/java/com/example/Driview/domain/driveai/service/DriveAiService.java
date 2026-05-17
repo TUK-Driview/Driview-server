@@ -4,9 +4,11 @@ import com.example.Driview.domain.driveai.dto.DriveAiAnalysisResponse;
 import com.example.Driview.domain.driveai.dto.DriveAiResponse;
 import com.example.Driview.domain.driveai.entity.DriveAiResult;
 import com.example.Driview.domain.driveai.repository.DriveAiResultRepository;
+import com.example.Driview.domain.driving.entity.DrivingReport;
 import com.example.Driview.domain.driving.entity.DrivingSession;
 import com.example.Driview.domain.driving.entity.ViolationEvent;
 import com.example.Driview.domain.driving.enums.ViolationType;
+import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.user.entity.User;
@@ -32,12 +34,14 @@ import java.util.concurrent.CompletableFuture;
 public class DriveAiService {
 
     private static final DateTimeFormatter FILENAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final int LANE_DEDUCTION_PER_DEPARTURE = 3; // 차선이탈 1회당 -3점
 
     private final WebClient driveAiWebClient;
     private final UserRepository userRepository;
     private final DrivingSessionRepository drivingSessionRepository;
     private final DriveAiResultRepository driveAiResultRepository;
     private final ViolationEventRepository violationEventRepository;
+    private final DrivingReportRepository drivingReportRepository;
 
     public CompletableFuture<DriveAiAnalysisResponse> analyzeVideo(MultipartFile file, Long userId) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -57,6 +61,7 @@ public class DriveAiService {
                     DrivingSession session = createOrFindSession(result.getFilename(), userId);
                     saveResult(result, session);
                     saveLaneDepartureEvents(result.getLane_departure_timestamps(), session);
+                    saveOrUpdateReport(session, result.getLane_departure_count());
                     return new DriveAiAnalysisResponse(
                             session.getId(),
                             result.getLane_departure_count(),
@@ -91,6 +96,20 @@ public class DriveAiService {
         if (timestamps == null) return;
         for (Double ts : timestamps) {
             violationEventRepository.save(ViolationEvent.ofLaneDeparture(session, ts.intValue()));
+        }
+    }
+
+    private void saveOrUpdateReport(DrivingSession session, int laneDepartureCount) {
+        int laneScore = Math.max(0, 100 - laneDepartureCount * LANE_DEDUCTION_PER_DEPARTURE);
+        DrivingReport report = drivingReportRepository.findBySession_Id(session.getId()).orElse(null);
+
+        if (report == null) {
+            // FaceAI 분석 전 → 주의집중 100 기본값으로 생성
+            drivingReportRepository.save(DrivingReport.create(session, laneScore, 100, 100, 100));
+        } else {
+            // FaceAI 분석 완료 후 → 차선준수 점수만 업데이트
+            report.updateLaneScore(laneScore);
+            drivingReportRepository.save(report);
         }
     }
 

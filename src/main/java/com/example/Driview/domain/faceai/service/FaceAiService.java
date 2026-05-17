@@ -1,7 +1,9 @@
 package com.example.Driview.domain.faceai.service;
 
+import com.example.Driview.domain.driving.entity.DrivingReport;
 import com.example.Driview.domain.driving.entity.DrivingSession;
 import com.example.Driview.domain.driving.entity.ViolationEvent;
+import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.dto.FaceAiAnalysisResponse;
@@ -38,11 +40,14 @@ public class FaceAiService {
     private static final int DROWSY_WINDOW_SEC = 600;
     private static final int DROWSY_YAWN_THRESHOLD = 3;
 
+    private static final int ATTENTION_DEDUCTION_PER_EVENT = 10; // 졸음 판정 1회당 -10점
+
     private final WebClient faceAiWebClient;
     private final UserRepository userRepository;
     private final DrivingSessionRepository drivingSessionRepository;
     private final FaceAiResultRepository faceAiResultRepository;
     private final ViolationEventRepository violationEventRepository;
+    private final DrivingReportRepository drivingReportRepository;
 
     public CompletableFuture<FaceAiAnalysisResponse> analyzeVideo(MultipartFile file, Long userId) {
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
@@ -61,7 +66,8 @@ public class FaceAiService {
                 .thenApply(result -> {
                     DrivingSession session = createOrFindSession(result.getFilename(), userId);
                     saveResult(result, session);
-                    saveDrowsyEvents(result.getYawn_timestamps(), session);
+                    int drowsinessEventCount = saveDrowsyEvents(result.getYawn_timestamps(), session);
+                    saveOrUpdateReport(session, drowsinessEventCount);
                     return new FaceAiAnalysisResponse(
                             session.getId(),
                             result.getYawn_count(),
@@ -95,12 +101,13 @@ public class FaceAiService {
         }
     }
 
-    private void saveDrowsyEvents(List<Double> yawnTimestamps, DrivingSession session) {
-        if (yawnTimestamps == null || yawnTimestamps.size() < DROWSY_YAWN_THRESHOLD) return;
+    private int saveDrowsyEvents(List<Double> yawnTimestamps, DrivingSession session) {
+        if (yawnTimestamps == null || yawnTimestamps.size() < DROWSY_YAWN_THRESHOLD) return 0;
 
         List<Double> sorted = new ArrayList<>(yawnTimestamps);
         Collections.sort(sorted);
 
+        int count = 0;
         int i = 0;
         while (i <= sorted.size() - DROWSY_YAWN_THRESHOLD) {
             double windowStart = sorted.get(i);
@@ -110,10 +117,26 @@ public class FaceAiService {
                 violationEventRepository.save(
                         ViolationEvent.ofDrowsy(session, (int) thirdYawn)
                 );
+                count++;
                 i += DROWSY_YAWN_THRESHOLD;
             } else {
                 i++;
             }
+        }
+        return count;
+    }
+
+    private void saveOrUpdateReport(DrivingSession session, int drowsinessEventCount) {
+        int attentionScore = Math.max(0, 100 - drowsinessEventCount * ATTENTION_DEDUCTION_PER_EVENT);
+        DrivingReport report = drivingReportRepository.findBySession_Id(session.getId()).orElse(null);
+
+        if (report == null) {
+            // DriveAI 분석 전 → 차선준수 100 기본값으로 생성
+            drivingReportRepository.save(DrivingReport.create(session, 100, attentionScore, 100, 100));
+        } else {
+            // DriveAI 분석 완료 후 → 주의집중 점수만 업데이트
+            report.updateAttentionScore(attentionScore);
+            drivingReportRepository.save(report);
         }
     }
 
