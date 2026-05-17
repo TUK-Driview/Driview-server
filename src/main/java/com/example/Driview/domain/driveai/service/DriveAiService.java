@@ -118,6 +118,9 @@ public class DriveAiService {
             session.updateDuration(response.getDuration_sec().intValue());
             drivingSessionRepository.save(session);
         }
+        // 재분석 시 중복 방지 - 기존 결과 삭제 후 재저장
+        driveAiResultRepository.findBySession_Id(session.getId())
+                .ifPresent(driveAiResultRepository::delete);
         driveAiResultRepository.save(
                 DriveAiResult.create(session, response.getLane_departure_count(), response.getDuration_sec())
         );

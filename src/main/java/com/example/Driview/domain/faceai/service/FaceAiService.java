@@ -153,6 +153,9 @@ public class FaceAiService {
             drivingSessionRepository.save(session);
         }
 
+        // 재분석 시 중복 방지 - 기존 결과 삭제 후 재저장
+        faceAiResultRepository.findBySession_Id(session.getId())
+                .ifPresent(faceAiResultRepository::delete);
         FaceAiResult result = FaceAiResult.create(
                 session,
                 response.getYawn_count(),
