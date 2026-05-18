@@ -16,4 +16,6 @@ public interface ViolationEventRepository extends JpaRepository<ViolationEvent, 
     long countBySession_IdAndType(Long sessionId, ViolationType type);
 
     List<ViolationEvent> findBySession_IdOrderByOccurredAtSecAsc(Long sessionId);
+
+    void deleteBySession_IdAndType(Long sessionId, ViolationType type);
 }

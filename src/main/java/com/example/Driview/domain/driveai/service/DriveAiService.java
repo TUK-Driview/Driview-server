@@ -93,6 +93,8 @@ public class DriveAiService {
     }
 
     private void saveLaneDepartureEvents(List<Double> timestamps, DrivingSession session) {
+        // 재분석 시 중복 방지 - 기존 LANE_DEPARTURE 이벤트 삭제 후 재저장
+        violationEventRepository.deleteBySession_IdAndType(session.getId(), ViolationType.LANE_DEPARTURE);
         if (timestamps == null) return;
         for (Double ts : timestamps) {
             violationEventRepository.save(ViolationEvent.ofLaneDeparture(session, ts.intValue()));

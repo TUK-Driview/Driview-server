@@ -5,6 +5,7 @@ import com.example.Driview.domain.driving.entity.DrivingSession;
 import com.example.Driview.domain.driving.entity.ViolationEvent;
 import com.example.Driview.domain.driving.repository.DrivingReportRepository;
 import com.example.Driview.domain.driving.repository.DrivingSessionRepository;
+import com.example.Driview.domain.driving.enums.ViolationType;
 import com.example.Driview.domain.driving.repository.ViolationEventRepository;
 import com.example.Driview.domain.faceai.dto.FaceAiAnalysisResponse;
 import com.example.Driview.domain.faceai.dto.FaceAiResponse;
@@ -102,6 +103,9 @@ public class FaceAiService {
     }
 
     private int saveDrowsyEvents(List<Double> yawnTimestamps, DrivingSession session) {
+        // 재분석 시 중복 방지 - 기존 DROWSY 이벤트 삭제 후 재저장
+        violationEventRepository.deleteBySession_IdAndType(session.getId(), ViolationType.DROWSY);
+
         if (yawnTimestamps == null || yawnTimestamps.size() < DROWSY_YAWN_THRESHOLD) return 0;
 
         List<Double> sorted = new ArrayList<>(yawnTimestamps);
