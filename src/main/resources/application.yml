@@ -13,6 +13,10 @@ spring:
       max-file-size: 500MB
       max-request-size: 500MB
 
+  mvc:
+    async:
+      request-timeout: -1  # 무제한 (AI 영상 분석 소요 시간 대응)
+
   jpa:
     database: mysql # 사용할 데이터베이스 유형 지정 (MySQL)
     database-platform: org.hibernate.dialect.MySQLDialect # Hibernate에서 사용할 MySQL 방언(dialect) 설정
