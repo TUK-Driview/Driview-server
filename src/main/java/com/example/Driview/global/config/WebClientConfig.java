@@ -10,14 +10,14 @@ public class WebClientConfig {
     @Bean
     public WebClient faceAiWebClient() {
         return WebClient.builder()
-                .baseUrl("http://54.206.87.180:8000")
+                .baseUrl("http://54.79.110.2:8000")
                 .build();
     }
 
     @Bean
     public WebClient driveAiWebClient() {
         return WebClient.builder()
-                .baseUrl("http://3.106.123.93:8000")
+                .baseUrl("http://3.27.91.132:8000")
                 .build();
     }
 }
